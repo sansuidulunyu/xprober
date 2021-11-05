@@ -59,6 +59,21 @@ func GetLocalRegionByEc2(logger log.Logger) bool {
 		region := dataStr[:len(dataStr)-1]
 		LocalRegion = region
 	*/
-	LocalRegion = LocalIp
-	return true
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		level.Error(logger).Log("msg", "GetLocalIp_net.InterfaceAddrs", "err", err)
+		return false
+	}
+
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				addr := ipnet.IP.String()
+				LocalIp = addr
+				LocalRegion = LocalIp
+				return true
+			}
+		}
+	}
+	return false
 }
